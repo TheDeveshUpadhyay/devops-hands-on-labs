@@ -1,122 +1,189 @@
+# Day 04: Pull Docker Image
 
+## Objective
 
+Learn how to search, pull, inspect, verify, and remove Docker images using Docker CLI.
 
-Day 04: Pull Docker Image
-Solution:
+By the end of this lab, you'll understand:
 
-Step 1: Search Ubuntu Image
-#docker search ubuntu
-________________________________________
+- How to search Docker Hub for images
+- How to pull the latest image
+- How to pull a specific image version
+- How to inspect image details
+- How to view image history
+- How to remove images
+- Difference between `docker image prune` and `docker image prune -a`
 
-Step 2: Pull Ubuntu Image
-#docker pull ubuntu
+---
 
-Expected output:
+## Lab Environment
+
+- **OS:** Ubuntu 24.04 LTS
+- **Docker:** Installed and Running
+- **Platform:** AWS EC2
+
+---
+
+## Step 1: Search Ubuntu Image
+
+```bash
+docker search ubuntu
+```
+
+---
+
+## Step 2: Pull Ubuntu Image
+
+```bash
+docker pull ubuntu
+```
+
+### Expected Output
+
+```text
 Using default tag: latest
 latest: Pulling from library/ubuntu
 ...
 Status: Downloaded newer image for ubuntu:latest
-________________________________________
+```
 
-Step 3: Verify
-#docker images
+---
 
- 
-________________________________________
-Step 4: Pull a Specific Version
-#docker pull ubuntu:22.04
-________________________________________
-Step 5: Verify Again
-#docker images
- 
-________________________________________
-Step 7: Inspect an Image
-#docker image inspect ubuntu
-•	This displays detailed information such as:
-•	Image ID 
-•	Architecture 
-•	Operating System 
-•	Environment Variables 
-•	Layers 
-•	Creation Time 
-________________________________________
-Step 8: View Image History
-#docker history ubuntu
-This shows the layers that make up the image.
-________________________________________
-Step 9: Remove an Image
-Remove the Ubuntu image.
-#docker rmi ubuntu
+## Step 3: Verify
+
+```bash
+docker images
+```
+
+---
+
+## Step 4: Pull a Specific Version
+
+```bash
+docker pull ubuntu:22.04
+```
+
+---
+
+## Step 5: Verify Again
+
+```bash
+docker images
+```
+
+---
+
+## Step 6: Inspect an Image
+
+```bash
+docker image inspect ubuntu
+```
+
+This command displays:
+
+- Image ID
+- Architecture
+- Operating System
+- Environment Variables
+- Layers
+- Creation Time
+
+---
+
+## Step 7: View Image History
+
+```bash
+docker history ubuntu
+```
+
+This command displays all image layers.
+
+---
+
+## Step 8: Remove an Image
+
+```bash
+docker rmi ubuntu
+```
+
 If the image is being used by a container, Docker returns an error.
-________________________________________
-Step 10: Remove Unused Images
-#docker image prune
-To remove all unused images:
-#docker image prune -a
 
-#docker image prune         vs     #docker image prune -a
-#docker image prune
-It removes only dangling images.
+---
 
-What is dangling images?
-#docker images
-Output:
-REPOSITORY     TAG         IMAGE ID
-nginx                latest         a12345
-ubuntu             latest         b67890
-<none>            <none>      c98765
+# Remove Unused Images
 
-Notice this:
-<none>         <none>
-This is called a dangling image.
-These images are usually created when you:
-•	rebuild a Docker image, 
-•	build an image with the same tag, 
-•	or an image build is interrupted. 
+## Remove Dangling Images
 
-They consume disk space but are not useful anymore.
-
-
-Think of it like this
-Imagine your room:
-Room
-
-📚 Book
-💻 Laptop
-🗑️ Empty cardboard box
-
-Running:
+```bash
 docker image prune
-is like throwing away only the empty cardboard box.
-You keep the useful items.
+```
 
+## Remove All Unused Images
+
+```bash
 docker image prune -a
-This removes:
-•	Stopped containers 
-•	Unused networks 
-•	Dangling images 
-•	Unused images 
-•	Build cache
+```
 
-Unused means:
-No running container uses the image. 
-No stopped container references the image. 
+---
+
+# Difference Between
+
+| Command | Removes |
+|----------|---------|
+| `docker image prune` | Dangling images only |
+| `docker image prune -a` | All unused images |
+
+---
+
+## What are Dangling Images?
 
 Example:
-Before:
-nginx:latest
-ubuntu:22.04
-mysql:8.0
-redis:latest
 
-Suppose:
-nginx → used by a container ✅ 
-ubuntu → not used ❌ 
-mysql → not used ❌ 
-redis → not used ❌
+```text
+REPOSITORY     TAG         IMAGE ID
+nginx          latest      a12345
+ubuntu         latest      b67890
+<none>         <none>      c98765
+```
 
-Quick Memory Trick
-•	docker image prune → P = Partial cleanup (dangling images only). 
-•	docker image prune -a → A = All unused images.
+Images having `<none>` as Repository or Tag are called **Dangling Images**.
 
+They are created when:
 
+- Rebuilding an image
+- Re-tagging an image
+- Interrupted image builds
+
+They consume disk space but are no longer useful.
+
+---
+
+## Memory Trick
+
+✅ **docker image prune**
+
+**P = Partial Cleanup**
+
+Only removes **Dangling Images**.
+
+---
+
+✅ **docker image prune -a**
+
+**A = All Unused Images**
+
+Removes every image that is not referenced by any container.
+
+---
+
+## Summary
+
+In this lab, we learned how to:
+
+- Search Docker images
+- Pull latest and specific versions
+- Inspect image metadata
+- View image history
+- Remove images
+- Clean up unused Docker images
+- Understand the difference between `docker image prune` and `docker image prune -a`
