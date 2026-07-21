@@ -187,3 +187,4 @@ In this lab, we learned how to:
 - Remove images
 - Clean up unused Docker images
 - Understand the difference between `docker image prune` and `docker image prune -a`
+
