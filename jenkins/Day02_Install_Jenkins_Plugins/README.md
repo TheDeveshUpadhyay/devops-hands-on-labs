@@ -4,7 +4,7 @@
 
 Jenkins provides only the core features after installation. To integrate with tools like **Git, Docker, Kubernetes, Maven, AWS, SonarQube, and Slack**, you need to install plugins.
 
-Plugins make Jenkins flexible and customizable for different **CI/CD** requirements.
+Plugins make Jenkins flexible and customizable for different **CI/CD** requirements. 
 
 ---
 
