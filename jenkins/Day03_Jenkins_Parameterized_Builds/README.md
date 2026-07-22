@@ -1,4 +1,4 @@
-# Day 04: Jenkins Parameterized Builds
+# Day 03: Jenkins Parameterized Builds
 
 ## 📌 Solution
 
