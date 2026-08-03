@@ -1,87 +1,108 @@
-````markdown
-# 🚀 Day 12: Jenkins Multistage Pipeline
+# 🚀 Day 09: Jenkins Multistage Pipeline
 
-## 📌 Objective
-
-Learn how to create a **Jenkins Multistage Pipeline** that organizes the CI/CD workflow into multiple logical stages such as **Build, Unit Test, Code Analysis, Package, and Deploy**.
+Build a production-style Jenkins Declarative Pipeline by organizing the CI/CD workflow into multiple logical stages such as **Build**, **Unit Test**, **Code Analysis**, **Package**, and **Deploy**.
 
 ---
 
-# 📖 Scenario
+## 📖 Overview
 
-In real-world DevOps projects, a CI/CD pipeline is divided into multiple stages instead of using one large build script.
+In modern DevOps projects, CI/CD pipelines are divided into multiple stages instead of using one large build script.
 
-A typical pipeline includes:
-
-- 🔨 Build the application
-- 🧪 Run Unit Tests
-- 🔍 Perform Code Quality Analysis
-- 📦 Package the application
-- 🚀 Deploy to the target server
-
-Using a **Multistage Pipeline** improves:
+A Multistage Pipeline provides:
 
 - Better visualization
-- Easier troubleshooting
-- Better maintainability
+- Easier debugging
 - Pipeline as Code
+- Improved maintainability
+- Faster issue identification
 
 ---
 
-# 🛠️ Prerequisites
+## 🎯 Objective
 
-- Jenkins Installed
-- Pipeline Plugin Installed
-- Git Installed
+Create a Jenkins Declarative Pipeline that automates the following workflow:
+
+```text
+Build
+   ↓
+Unit Test
+   ↓
+Code Analysis
+   ↓
+Package
+   ↓
+Deploy
+```
+
+---
+
+## 🛠 Prerequisites
+
+- Jenkins
+- Git
+- Pipeline Plugin
+- Java
+- Maven
 - Jenkins Agent (Optional)
 
 ---
 
-# 📁 Step 1: Create a Pipeline Job
-
-Navigate to:
+# 📂 Project Workflow
 
 ```text
-Dashboard
-    ↓
-New Item
-```
-
-Enter:
-
-```text
-Multistage-Pipeline
-```
-
-Select:
-
-```text
-Pipeline
-```
-
-Click:
-
-```text
-OK
+Developer
+     │
+     ▼
+ Push Code
+     │
+     ▼
+ Jenkins Pipeline
+     │
+     ▼
+ Build
+     │
+     ▼
+ Unit Test
+     │
+     ▼
+ Code Analysis
+     │
+     ▼
+ Package
+     │
+     ▼
+ Deploy
+     │
+     ▼
+ Application Server
 ```
 
 ---
 
-# ⚙️ Step 2: Configure the Pipeline
+# 🚀 Implementation
+
+## Step 1 — Create Pipeline Job
+
+Create a new Jenkins Pipeline Job.
+
+| Setting | Value |
+|---------|-------|
+| Job Name | Multistage-Pipeline |
+| Job Type | Pipeline |
+
+---
+
+## Step 2 — Configure Pipeline
 
 Navigate to:
 
-```text
-Pipeline
 ```
-
-Definition:
-
-```text
+Pipeline
+    ↓
 Pipeline Script
 ```
 
-Paste the following pipeline:
+Paste the following Jenkinsfile.
 
 ```groovy
 pipeline {
@@ -121,6 +142,7 @@ pipeline {
     }
 
     post {
+
         success {
             echo 'Pipeline Completed Successfully'
         }
@@ -132,56 +154,49 @@ pipeline {
 }
 ```
 
-Click **Save**.
+Save the Pipeline.
 
 ---
 
-# ▶️ Step 3: Build the Pipeline
+## Step 3 — Execute Pipeline
 
-Click:
+Click
 
-```text
+```
 Build Now
 ```
 
 ---
 
-# 📊 Step 4: View Stage View
+## ✅ Expected Stage View
 
-After execution, Jenkins displays:
-
-```text
+```
 ✔ Build
+
 ✔ Unit Test
+
 ✔ Code Analysis
+
 ✔ Package
+
 ✔ Deploy
 ```
 
-Each stage turns **green** after successful execution.
-
 ---
 
-# 🖥️ Step 5: View Console Output
-
-Navigate to:
-
-```text
-Build History
-      ↓
-Latest Build
-      ↓
-Console Output
-```
-
-Expected Output:
+## 🖥 Expected Console Output
 
 ```text
 Building Application...
+
 Running Unit Tests...
+
 Performing Code Quality Check...
+
 Packaging Application...
+
 Deploying Application...
+
 Pipeline Completed Successfully
 
 Finished: SUCCESS
@@ -189,99 +204,68 @@ Finished: SUCCESS
 
 ---
 
-# 🔄 Pipeline Flow
+# 📦 Understanding Pipeline Stages
 
-```text
-Developer
-     │
-     ▼
-Push Code
-     │
-     ▼
-Jenkins Pipeline
-     │
-     ▼
-Build
-     │
-     ▼
-Unit Test
-     │
-     ▼
-Code Analysis
-     │
-     ▼
-Package
-     │
-     ▼
-Deploy
-     │
-     ▼
-Application Server
-```
+| Stage | Purpose |
+|--------|----------|
+| Build | Compile application source code |
+| Unit Test | Execute automated test cases |
+| Code Analysis | Analyze code quality using SonarQube |
+| Package | Generate deployable artifact |
+| Deploy | Deploy application to target environment |
 
 ---
 
-# 📚 Understanding Each Stage
+# ⚙ Maven Commands Explained
 
-## 🔨 Build
-
-Compiles the application source code.
-
-Example:
+## Build
 
 ```bash
 mvn clean compile
 ```
 
+Removes previous build files and compiles Java source code.
+
 ---
 
-## 🧪 Unit Test
-
-Runs automated unit test cases.
-
-Example:
+## Unit Test
 
 ```bash
 mvn test
 ```
 
+Executes unit tests.
+
 ---
 
-## 🔍 Code Analysis
-
-Checks code quality using tools such as **SonarQube**.
-
-Example:
+## Code Analysis
 
 ```bash
 mvn sonar:sonar
 ```
 
+Runs static code analysis using SonarQube.
+
 ---
 
-## 📦 Package
-
-Creates the deployable artifact.
-
-Example:
+## Package
 
 ```bash
 mvn package
 ```
 
-Output:
+Creates the deployable JAR/WAR artifact.
 
-```text
-app.jar
+Example Output
+
+```
+target/
+└── app.jar
 ```
 
 ---
 
-## 🚀 Deploy
-
-Deploys the application to the target server.
-
-Example:
+## Deploy
 
 ```bash
 scp target/app.jar ubuntu@<Server-IP>:/opt/app/
@@ -289,237 +273,128 @@ scp target/app.jar ubuntu@<Server-IP>:/opt/app/
 ssh ubuntu@<Server-IP> "systemctl restart myapp"
 ```
 
+Deploys the application to the target server.
+
 ---
 
-# 📖 Understanding `mvn clean compile`
+# 🔍 Understanding `mvn clean compile`
 
-The command:
+The command contains three parts.
 
 ```bash
 mvn clean compile
 ```
 
-contains three parts:
+| Command | Description |
+|----------|-------------|
+| mvn | Executes Maven |
+| clean | Removes previous build artifacts (`target/`) |
+| compile | Compiles Java source files into `.class` files |
 
-1. `mvn`
-2. `clean`
-3. `compile`
-
-Let's understand each one.
-
----
-
-## 1️⃣ mvn
-
-`mvn` tells the system to execute **Apache Maven**.
-
-```text
-mvn
-```
-
-Meaning:
-
-> Run Maven and execute the specified goals.
-
----
-
-## 2️⃣ clean
-
-The **clean** goal removes files generated by previous builds.
-
-It deletes the:
-
-```text
-target/
-```
-
-directory.
-
-### Before
-
-```text
-Project
-│
-├── src/
-├── pom.xml
-└── target/
-      ├── classes/
-      ├── app.jar
-      └── ...
-```
-
-### After
-
-```text
-Project
-│
-├── src/
-└── pom.xml
-```
-
-### Why?
-
-Cleaning removes old build files and prevents previous artifacts from affecting the current build.
-
----
-
-## 3️⃣ compile
-
-The **compile** goal converts Java source code (`.java`) into Java bytecode (`.class`).
-
-### Before
-
-```text
-src/
-└── Hello.java
-```
-
-### After
-
-```text
-target/
-└── classes/
-      └── Hello.class
-```
-
----
-
-# 🔄 What Happens When You Run `mvn clean compile`?
+Execution Flow
 
 ```text
 mvn clean compile
-        │
-        ▼
-Delete old target directory
-        │
-        ▼
+
+      │
+
+      ▼
+
+Delete target/
+
+      │
+
+      ▼
+
 Read pom.xml
-        │
-        ▼
-Download dependencies (if required)
-        │
-        ▼
-Compile Java source code
-        │
-        ▼
-Generate .class files
+
+      │
+
+      ▼
+
+Download dependencies
+
+      │
+
+      ▼
+
+Compile Java Files
+
+      │
+
+      ▼
+
+Generate .class Files
 ```
 
 ---
 
-## Example Project
-
-Before:
-
-```text
-MyApp/
-│
-├── pom.xml
-└── src/
-      └── Hello.java
-```
-
-Run:
-
-```bash
-mvn clean compile
-```
-
-Result:
-
-```text
-MyApp/
-│
-├── pom.xml
-├── src/
-└── target/
-      └── classes/
-            └── Hello.class
-```
-
-> **Note:** No JAR file is created yet.
-
----
-
-# 📦 Maven Build Lifecycle
+# 📚 Maven Lifecycle
 
 | Command | Purpose |
-|----------|---------|
-| `mvn clean` | Deletes the `target/` directory |
-| `mvn compile` | Compiles Java source code |
-| `mvn test` | Runs Unit Tests |
-| `mvn package` | Creates a JAR/WAR file |
-| `mvn install` | Installs the artifact into the local Maven repository |
-| `mvn deploy` | Uploads the artifact to a remote repository |
+|----------|----------|
+| mvn clean | Delete previous build |
+| mvn compile | Compile Java source code |
+| mvn test | Run Unit Tests |
+| mvn package | Create JAR/WAR |
+| mvn install | Install artifact into Local Repository |
+| mvn deploy | Upload artifact to Remote Repository |
 
 ---
 
-# 💼 DevOps Perspective
+# 🌍 Real-World CI/CD Pipeline
 
-A typical Jenkins Build stage looks like:
+Enterprise Jenkins pipelines typically follow this workflow.
 
-```groovy
-stage('Build') {
-    steps {
-        sh 'mvn clean compile'
-    }
-}
-```
+```text
+Checkout
 
-Jenkins performs the following:
+     │
 
-1. Deletes previous build output.
-2. Reads the `pom.xml`.
-3. Downloads dependencies if required.
-4. Compiles Java source code.
-5. Stops the pipeline if compilation fails.
+     ▼
 
-If Build succeeds, the pipeline continues to the next stages.
+Build
 
----
+     │
 
-# 🌍 Real Project Example 1 – Java Application
+     ▼
 
-```groovy
-pipeline {
-    agent any
+Unit Test
 
-    stages {
+     │
 
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/company/project.git'
-            }
-        }
+     ▼
 
-        stage('Build') {
-            steps {
-                sh 'mvn clean package'
-            }
-        }
+Code Analysis
 
-        stage('Test') {
-            steps {
-                sh 'mvn test'
-            }
-        }
+     │
 
-        stage('Deploy') {
-            steps {
-                sh '''
-                scp target/app.jar ubuntu@server:/opt/app/
+     ▼
 
-                ssh ubuntu@server "systemctl restart myapp"
-                '''
-            }
-        }
-    }
-}
+Package
+
+     │
+
+     ▼
+
+Docker Build
+
+     │
+
+     ▼
+
+Docker Push
+
+     │
+
+     ▼
+
+Deploy
 ```
 
 ---
 
-# 🐳 Real Project Example 2 – Docker
+# 🐳 Docker Deployment Example
 
 ```groovy
 stage('Build Docker Image') {
@@ -541,119 +416,40 @@ stage('Deploy') {
 }
 ```
 
-Pipeline Flow:
-
-```text
-Build
-   │
-   ▼
-Test
-   │
-   ▼
-Docker Build
-   │
-   ▼
-Docker Push
-   │
-   ▼
-Kubernetes Deploy
-```
-
 ---
 
-# 🤔 Why Use Multistage Pipelines?
+# 💼 DevOps Best Practices
 
-Without stages:
-
-```text
-One Huge Script
-      │
-      ▼
-Hard to Debug
-      │
-      ▼
-Poor Visibility
-```
-
-With stages:
-
-```text
-Build
-   │
-   ▼
-Test
-   │
-   ▼
-Code Analysis
-   │
-   ▼
-Package
-   │
-   ▼
-Deploy
-```
-
-Benefits:
-
-- Better visualization
-- Easier debugging
-- Independent stages
-- Improved maintainability
-
----
-
-# ✅ Expected Outcome
-
-- Multistage Pipeline created successfully.
-- Build stage executed.
-- Unit Test stage executed.
-- Code Analysis stage executed.
-- Package stage executed.
-- Deploy stage executed.
-- Pipeline completed successfully.
+- Keep each stage focused on a single responsibility.
+- Fail fast if Build or Unit Test fails.
+- Run Code Analysis before packaging.
+- Store Jenkinsfile in Git.
+- Automate deployments using Pipeline as Code.
+- Use separate environments for Dev, QA, and Production.
 
 ---
 
 # 🎯 Interview Questions
 
-## Q1. What is a Multistage Pipeline?
+### What is a Jenkins Multistage Pipeline?
 
-**Answer:**
-
-A Multistage Pipeline divides the CI/CD process into multiple logical stages such as Build, Test, Package, and Deploy.
+A Multistage Pipeline divides the CI/CD workflow into multiple logical stages for better visualization and maintainability.
 
 ---
 
-## Q2. Why are stages used in Jenkins Pipelines?
+### Why are stages used?
 
-**Answer:**
-
-Stages improve:
-
-- Readability
-- Debugging
-- Monitoring
-- Pipeline visualization
+They improve readability, debugging, monitoring, and simplify troubleshooting.
 
 ---
 
-## Q3. Can a pipeline contain multiple stages?
+### What happens if one stage fails?
 
-**Answer:**
-
-Yes. A Jenkins Pipeline can contain any number of stages depending on project requirements.
+The pipeline stops execution, and subsequent stages are skipped by default.
 
 ---
 
-## Q4. What happens if one stage fails?
-
-**Answer:**
-
-The pipeline stops execution by default, and subsequent stages are not executed.
-
----
-
-## Q5. What are common stages in a real CI/CD pipeline?
+### What are common CI/CD stages?
 
 - Checkout
 - Build
@@ -666,44 +462,26 @@ The pipeline stops execution by default, and subsequent stages are not executed.
 
 ---
 
-## Q6. Why are Multistage Pipelines preferred in real projects?
+### Why are Multistage Pipelines preferred?
 
-**Answer:**
-
-They provide:
-
-- Better visualization
-- Easier troubleshooting
-- Pipeline as Code
-- Version control
-- Easier maintenance
-- Improved scalability
+They support Pipeline as Code, improve maintainability, enable version control, and provide better visibility into the CI/CD process.
 
 ---
 
 # 📌 Key Takeaways
 
-- Multistage Pipelines divide CI/CD into logical stages.
-- Each stage performs a specific responsibility.
-- Jenkins provides excellent visualization for every stage.
-- Pipeline as Code improves collaboration and version control.
-- Maven commands such as `mvn clean compile`, `mvn test`, and `mvn package` are commonly used in enterprise Jenkins pipelines.
-- Multistage Pipelines are the industry standard for modern CI/CD workflows.
+- Implemented a Jenkins Declarative Multistage Pipeline.
+- Learned how CI/CD workflows are organized into logical stages.
+- Understood Maven build lifecycle commands.
+- Explored production-ready Jenkins pipeline design.
+- Practiced Pipeline as Code following industry best practices.
 
 ---
 
-# 🎉 Conclusion
+# ⭐ Connect With Me
 
-Today, I learned how to build a **Jenkins Multistage Pipeline** by separating the CI/CD workflow into multiple stages such as **Build**, **Unit Test**, **Code Analysis**, **Package**, and **Deploy**.
+If you found this project helpful, consider giving this repository a **Star ⭐**.
 
-I also gained a deeper understanding of the Maven build lifecycle and the importance of `mvn clean compile` in real-world DevOps projects. Organizing pipelines into stages makes them easier to maintain, troubleshoot, and scale, which is why Multistage Pipelines are widely adopted in modern software delivery.
-
----
-
-## ⭐ Support
-
-If you found this repository helpful, consider giving it a **⭐ Star** and follow my DevOps learning journey.
+Feel free to connect with me on LinkedIn to follow my **100 Days of DevOps** journey.
 
 Happy Learning! 🚀
-````
-
