@@ -1,434 +1,381 @@
-# 🚀 Day 05: Jenkins Project Security
+# 🚀 Day 05: Jenkins Deploy Pipeline
 
 ## 📖 Overview
 
-This project demonstrates how to secure a Jenkins server by enabling authentication, creating multiple users, and implementing **Role-Based Access Control (RBAC)** using the **Role-Based Authorization Strategy** plugin.
+This project demonstrates how to create a **Jenkins Declarative Pipeline** that automates the software deployment process. The pipeline is divided into multiple stages—**Build**, **Test**, and **Deploy**—to provide a structured, reliable, and repeatable CI/CD workflow.
 
 ---
 
 ## 🎯 Objective
 
-Learn how to secure Jenkins by:
+Learn how to create a Jenkins Pipeline that:
 
-- Enabling Security
-- Creating Multiple Users
-- Implementing Role-Based Access Control (RBAC)
-- Assigning different permissions based on user roles
+- Builds an application
+- Executes automated tests
+- Deploys the application automatically
+- Provides deployment status after execution
 
 ---
 
 ## 🌍 Real-World Scenario
 
-In enterprise environments, not every team member should have full administrative access to Jenkins.
+In modern DevOps practices, software deployment is fully automated using Jenkins Pipelines.
 
-Different users require different permission levels based on their responsibilities.
+After developers push code to a Git repository:
 
-| Role | Responsibilities |
-|------|------------------|
-| **Admin** | Manage Jenkins, install plugins, create jobs, manage users |
-| **Developer** | Build jobs, view logs, access assigned projects |
-| **Tester** | View build status, monitor job results |
+- Jenkins builds the application.
+- Automated tests validate the code.
+- The application is deployed to the target environment if all previous stages succeed.
 
-Implementing **RBAC** ensures secure and controlled access to Jenkins resources.
+This automation reduces manual effort, minimizes deployment errors, and ensures consistent software delivery.
 
 ---
 
 ## 🛠 Prerequisites
 
 - Jenkins Installed
-- Administrative Access to Jenkins
-- Role-Based Authorization Strategy Plugin
-- Jenkins Own User Database Enabled
+- Git Installed
+- Pipeline Plugin Installed
+- SSH Access to Deployment Server
+- Jenkins Agent (Optional)
 
 ---
 
 # 🚀 Implementation
 
-## Step 1: Install the Role-Based Authorization Plugin
+## Step 1: Create a Pipeline Job
 
 Navigate to:
 
 ```text
 Dashboard
     ↓
-Manage Jenkins
-    ↓
-Plugins
-    ↓
-Available Plugins
+New Item
 ```
 
-Search for:
+Enter the job name:
 
 ```text
-Role-Based Authorization Strategy
+Deploy-Pipeline
 ```
 
-Install the plugin.
+Select:
 
-Restart Jenkins if required.
+```text
+Pipeline
+```
+
+Click **OK**.
 
 ---
 
-## Step 2: Enable Jenkins Security
+## Step 2: Configure the Pipeline
 
 Navigate to:
 
 ```text
-Dashboard
-    ↓
-Manage Jenkins
-    ↓
-Security
+Pipeline
 ```
 
-Configure the following settings:
-
-### Enable Security
+Definition:
 
 ```text
-✔ Enable Security
+Pipeline Script
 ```
 
-### Security Realm
+Paste the following Jenkins Pipeline:
 
-Select:
+```groovy
+pipeline {
+    agent any
 
-```text
-Jenkins' own user database
-```
+    stages {
 
-### Authorization
+        stage('Build') {
+            steps {
+                echo 'Building Application...'
+            }
+        }
 
-Select:
+        stage('Test') {
+            steps {
+                echo 'Running Tests...'
+            }
+        }
 
-```text
-Role-Based Strategy
+        stage('Deploy') {
+            steps {
+                echo 'Deploying Application...'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Deployment Successful'
+        }
+
+        failure {
+            echo 'Build Failed'
+        }
+    }
+}
 ```
 
 Click **Save**.
 
 ---
 
-## Step 3: Create Jenkins Users
+## Step 3: Execute the Pipeline
+
+Click:
+
+```text
+Build Now
+```
+
+---
+
+## Step 4: View Stage View
+
+After successful execution, Jenkins displays:
+
+```text
+✔ Build
+✔ Test
+✔ Deploy
+```
+
+Each completed stage is highlighted in the Stage View.
+
+---
+
+## Step 5: View Console Output
 
 Navigate to:
 
 ```text
-Dashboard
-    ↓
-Manage Jenkins
-    ↓
-Users
-    ↓
-Create User
+Build History
+      ↓
+Latest Build
+      ↓
+Console Output
 ```
 
-Create the following users:
+Expected output:
 
 ```text
-admin
-developer
-tester
-```
+Building Application...
 
----
+Running Tests...
 
-## Step 4: Create Roles
+Deploying Application...
 
-Navigate to:
+Deployment Successful
 
-```text
-Dashboard
-    ↓
-Manage Jenkins
-    ↓
-Manage and Assign Roles
-```
-
-Create the following roles:
-
-```text
-admin
-developer
-tester
+Finished: SUCCESS
 ```
 
 ---
 
-## Step 5: Assign Permissions
-
-Configure permissions for each role.
-
-### 👨‍💼 Admin
-
-Grant full administrative permissions.
-
-Example permissions:
-
-- Overall → Administer
-- Job → Create
-- Job → Configure
-- Job → Delete
-- Credentials → Create
-- Credentials → Update
-- Credentials → Delete
-
----
-
-### 👨‍💻 Developer
-
-Grant permissions required for development activities.
-
-Example permissions:
-
-- Overall → Read
-- Job → Read
-- Job → Build
-- Job → Workspace
-- Job → Discover
-
-Developers cannot modify Jenkins system settings.
-
----
-
-### 🧪 Tester
-
-Grant read-only permissions.
-
-Example permissions:
-
-- Overall → Read
-- Job → Read
-- View → Read
-
-Testers can monitor builds but cannot trigger or modify jobs.
-
----
-
-## Step 6: Assign Users to Roles
-
-Navigate to:
+# 🔄 Pipeline Workflow
 
 ```text
-Dashboard
-    ↓
-Manage Jenkins
-    ↓
-Manage and Assign Roles
-    ↓
-Assign Roles
-```
-
-Assign users:
-
-| User | Role |
-|------|------|
-| admin | Admin |
-| developer | Developer |
-| tester | Tester |
-
-Click **Save**.
-
----
-
-## Step 7: Verify Access
-
-Log in with each user account and verify access.
-
-### Admin
-
-- Full Jenkins access
-- Create Jobs
-- Install Plugins
-- Manage Users
-- Configure Jenkins
-
----
-
-### Developer
-
-- View Jobs
-- Trigger Builds
-- View Console Output
-
-Cannot:
-
-- Install Plugins
-- Create Users
-- Configure Jenkins Security
-
----
-
-### Tester
-
-- View Jobs
-- View Build History
-- View Console Logs
-
-Cannot:
-
-- Trigger Builds
-- Modify Jobs
-- Configure Jenkins
-
----
-
-# 🔄 User Access Flow
-
-```text
-Users
-   │
-   ▼
-Authentication
-   │
-   ▼
-Role-Based Authorization
-   │
-   ▼
-Assigned Permissions
-   │
-   ▼
-Access Jenkins Resources
-```
-
----
-
-# 💼 Real-World Example
-
-A software development team may have the following Jenkins access model:
-
-```text
-Admin
-   │
-   ├── Configure Jenkins
-   ├── Install Plugins
-   ├── Create Users
-   └── Manage Credentials
-
 Developer
-   │
-   ├── Trigger Builds
-   ├── View Logs
-   └── Access Assigned Jobs
-
-Tester
-   │
-   ├── Monitor Builds
-   ├── View Reports
-   └── Verify Deployment Status
+     │
+     ▼
+Push Code
+     │
+     ▼
+Jenkins Pipeline
+     │
+     ▼
+Build
+     │
+     ▼
+Test
+     │
+     ▼
+Deploy
+     │
+     ▼
+Application Server
 ```
-
-This separation of responsibilities improves security and reduces operational risks.
 
 ---
 
-# 🔒 Why Use RBAC?
+# 💼 Real Project Deployment Example
 
-Without Role-Based Access Control:
+In production environments, the Deploy stage connects to a remote server using SSH.
 
-- Every user has excessive permissions.
-- Higher risk of accidental changes.
-- Increased security vulnerabilities.
+### Example: Docker Deployment
 
-With RBAC:
+```groovy
+stage('Deploy') {
+    steps {
+        sh '''
+        ssh ubuntu@<Server-IP> "
+            cd /opt/app &&
+            docker compose pull &&
+            docker compose up -d
+        "
+        '''
+    }
+}
+```
 
-- Least privilege access.
-- Improved security.
-- Better compliance.
-- Easier user management.
-- Reduced operational risk.
+### Deployment Workflow
+
+```text
+SSH Login
+     │
+     ▼
+Navigate to Application Directory
+     │
+     ▼
+Pull Latest Docker Images
+     │
+     ▼
+Restart Containers
+```
+
+---
+
+## Java Application Deployment
+
+Instead of Docker, Jenkins can deploy Java applications.
+
+```groovy
+stage('Deploy') {
+    steps {
+        sh '''
+        scp target/app.jar ubuntu@<Server-IP>:/opt/app/
+
+        ssh ubuntu@<Server-IP> "
+        systemctl restart myapp
+        "
+        '''
+    }
+}
+```
+
+### Deployment Workflow
+
+```text
+Build JAR
+     │
+     ▼
+Copy JAR using SCP
+     │
+     ▼
+Connect via SSH
+     │
+     ▼
+Restart Application Service
+```
+
+---
+
+# 🚀 Why Use Jenkins Pipelines?
+
+Compared to traditional Freestyle Jobs, Jenkins Pipelines provide:
+
+- Pipeline as Code
+- Version Control using Git
+- Better Visualization
+- Easier Maintenance
+- Reusable Stages
+- Improved Scalability
+- Integration with Docker, Kubernetes, Terraform, and Cloud Platforms
 
 ---
 
 # ✅ Expected Outcome
 
-- Jenkins Security enabled successfully.
-- Authentication configured.
-- Multiple users created.
-- Roles created using RBAC.
-- Permissions assigned correctly.
-- Users can access only the resources allowed by their roles.
+- Jenkins Pipeline created successfully.
+- Build stage executed successfully.
+- Test stage executed successfully.
+- Deploy stage executed successfully.
+- Application deployment completed successfully.
 
 ---
 
 # 🎯 Interview Questions
 
-### Q1. What is Jenkins Project Security?
+### Q1. What is a Jenkins Pipeline?
 
 **Answer:**
 
-Jenkins Project Security protects Jenkins by controlling user authentication and authorization, ensuring users have only the permissions required for their role.
+A Jenkins Pipeline is a collection of automated stages defined as code (Jenkinsfile) that build, test, and deploy an application.
 
 ---
 
-### Q2. What is Role-Based Access Control (RBAC)?
+### Q2. What are the two types of Jenkins Pipelines?
 
 **Answer:**
 
-RBAC is a security model where permissions are assigned to roles rather than individual users. Users inherit permissions based on their assigned role.
+- Declarative Pipeline
+- Scripted Pipeline
 
 ---
 
-### Q3. Why is RBAC important?
+### Q3. What is the difference between Freestyle Jobs and Pipeline Jobs?
+
+| Freestyle Job | Pipeline Job |
+|---------------|--------------|
+| GUI-based configuration | Pipeline as Code (Jenkinsfile) |
+| Limited flexibility | Highly flexible |
+| Difficult to version control | Stored in Git and version controlled |
+| Less reusable | Modular and reusable |
+
+---
+
+### Q4. What is a Stage in Jenkins Pipeline?
 
 **Answer:**
 
-RBAC:
-
-- Improves security
-- Reduces unauthorized access
-- Simplifies permission management
-- Supports the principle of least privilege
+A stage is a logical phase of the CI/CD workflow, such as **Build**, **Test**, or **Deploy**, that improves organization and visualization.
 
 ---
 
-### Q4. Which plugin provides RBAC in Jenkins?
+### Q5. What is the purpose of `agent any`?
 
 **Answer:**
 
-```text
-Role-Based Authorization Strategy
-```
+`agent any` instructs Jenkins to execute the pipeline on any available Jenkins agent or on the controller if no agent is available.
 
 ---
 
-### Q5. What authentication option is commonly used in Jenkins?
+### Q6. Why are Jenkins Pipelines preferred in real projects?
 
 **Answer:**
 
-```text
-Jenkins' own user database
-```
+Because they provide:
 
-Other authentication providers include LDAP, Active Directory, GitHub OAuth, and SAML.
-
----
-
-### Q6. What is the difference between Authentication and Authorization?
-
-| Authentication | Authorization |
-|---------------|---------------|
-| Verifies user identity | Determines user permissions |
-| "Who are you?" | "What can you do?" |
+- Pipeline as Code
+- Version Control
+- Better Visualization
+- Automation
+- Reusable Stages
+- Easy Integration with Git, Docker, Kubernetes, Terraform, and Cloud Services
 
 ---
 
 # 📌 Key Takeaways
 
-- Jenkins Security protects the CI/CD environment from unauthorized access.
-- RBAC allows permissions to be managed through roles instead of individual users.
-- Authentication verifies user identity, while authorization controls access.
-- Following the Principle of Least Privilege improves security and operational stability.
-- RBAC is a standard practice in enterprise Jenkins deployments.
+- Jenkins Pipelines automate the complete CI/CD workflow.
+- Pipelines divide software delivery into logical stages.
+- Declarative Pipelines improve readability and maintainability.
+- Automated deployments reduce manual effort and deployment failures.
+- Jenkins Pipelines are widely adopted in enterprise DevOps environments.
 
 ---
 
 # 🎉 Conclusion
 
-Today, I learned how to secure Jenkins using **Role-Based Access Control (RBAC)**. By enabling authentication, creating users, defining roles, and assigning permissions, Jenkins can provide secure access tailored to different team responsibilities.
+Today, I learned how to create a **Jenkins Deploy Pipeline** that automates the **Build**, **Test**, and **Deploy** stages of a CI/CD workflow.
 
-Implementing RBAC is a fundamental DevOps security practice that helps protect CI/CD pipelines while ensuring users have only the permissions they need.
+By defining the deployment process as code using a **Jenkinsfile**, software delivery becomes more reliable, consistent, and scalable. This approach is widely used in modern DevOps environments to streamline application deployments across on-premises and cloud platforms.
 
 ---
 
