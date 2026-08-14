@@ -1,55 +1,40 @@
-# 🌐 Day 08: Create a Docker Network
+# Day 08: Create a Docker Network
 
-Learn how to create a **custom Docker network** and enable communication between multiple Docker containers.
+## Solution
 
 ---
 
-# 📌 Objective
+## Objective
 
 Learn how to create a custom Docker network and enable communication between multiple Docker containers.
 
-By the end of this lab, you will understand:
-
-- How to create a Docker network
-- How to connect containers to a custom network
-- How containers communicate with each other
-- How Docker provides DNS resolution using container names
-- How to disconnect and reconnect containers from a network
-
 ---
 
-# 🌍 Scenario
+## Scenario
 
 In real DevOps projects, applications are often split into multiple containers.
 
 For example:
 
-```text
-Frontend Container
-        │
-        ▼
-Backend Container
-        │
-        ▼
-Database Container
-```
+- Frontend Container
+- Backend Container
+- Database Container
 
 These containers need to communicate with each other.
 
-Docker Networks provide an isolated networking environment that allows containers to communicate with each other.
+Docker Networks provide secure communication between containers without exposing containers directly to the host.
 
 ---
 
-# 🛠️ Prerequisites
+## Prerequisites
 
 - Docker Installed
-- Basic understanding of Docker Images and Containers
+- Basic knowledge of Docker Images and Containers
 - Ubuntu image available locally
-- Basic Linux command knowledge
 
 ---
 
-# 📁 Step 1: View Existing Docker Networks
+## Step 1: View Existing Docker Networks
 
 Run:
 
@@ -57,32 +42,24 @@ Run:
 docker network ls
 ```
 
-Example output:
+### Expected Output
 
 ```text
 NETWORK ID     NAME      DRIVER    SCOPE
-xxxxxxxx       bridge    bridge    local
-xxxxxxxx       host      host      local
-xxxxxxxx       none      null      local
+xxxxxxxx      bridge    bridge    local
+xxxxxxxx      host      host      local
+xxxxxxxx      none      null      local
 ```
 
 ### Explanation
 
-| Network | Driver | Purpose |
-|---|---|---|
-| `bridge` | bridge | Default network for containers |
-| `host` | host | Container shares the host's network |
-| `none` | null | Disables networking |
+- **bridge** → Default network for containers
+- **host** → Shares the host's network
+- **none** → No networking
 
 ---
 
-# 🌐 Step 2: Create a Custom Docker Network
-
-Create a custom network named:
-
-```text
-devops-network
-```
+## Step 2: Create a Custom Network
 
 Run:
 
@@ -96,21 +73,21 @@ Verify:
 docker network ls
 ```
 
-Expected output:
+### Expected Output
 
 ```text
-NETWORK ID     NAME             DRIVER    SCOPE
-xxxxxxxx       bridge           bridge    local
-xxxxxxxx       host             host      local
-xxxxxxxx       none             null      local
-xxxxxxxx       devops-network   bridge    local
+NETWORK ID     NAME              DRIVER    SCOPE
+xxxxxxxx      bridge            bridge    local
+xxxxxxxx      host              host      local
+xxxxxxxx      none              null      local
+xxxxxxxx      devops-network    bridge    local
 ```
 
-The custom network `devops-network` is created using the **bridge** network driver.
+The custom Docker network `devops-network` has now been created.
 
 ---
 
-# 🔍 Step 3: Inspect the Network
+## Step 3: Inspect the Network
 
 Run:
 
@@ -118,18 +95,18 @@ Run:
 docker network inspect devops-network
 ```
 
-Expected output:
+### Expected Output
 
 ```json
 [
-    {
-        "Name": "devops-network",
-        "Driver": "bridge",
-        "IPAM": {
-            "Driver": "default"
-        },
-        "Containers": {}
-    }
+  {
+    "Name": "devops-network",
+    "Driver": "bridge",
+    "IPAM": {
+      ...
+    },
+    "Containers": {}
+  }
 ]
 ```
 
@@ -139,13 +116,11 @@ Notice:
 "Containers": {}
 ```
 
-This means that no containers are connected to the network yet.
+No containers are connected to the network yet.
 
 ---
 
-# 🐳 Step 4: Create the First Container
-
-Create the first Ubuntu container and attach it to the custom network.
+## Step 4: Create the First Container
 
 Run:
 
@@ -159,24 +134,11 @@ Verify:
 docker ps
 ```
 
-Example output:
-
-```text
-CONTAINER ID   IMAGE     STATUS       NAMES
-xxxxxxxx       ubuntu    Up 1 minute  container1
-```
-
-The container is now connected to:
-
-```text
-devops-network
-```
+The container should be running and connected to `devops-network`.
 
 ---
 
-# 🐳 Step 5: Create the Second Container
-
-Create another Ubuntu container on the same network.
+## Step 5: Create the Second Container
 
 Run:
 
@@ -190,19 +152,18 @@ Verify:
 docker ps
 ```
 
-Expected output:
+### Expected Output
 
 ```text
-CONTAINER ID   IMAGE     STATUS        NAMES
-xxxxxxxx       ubuntu    Up 2 minutes  container1
-xxxxxxxx       ubuntu    Up 1 minute   container2
+container1
+container2
 ```
 
-Both containers are now connected to the same custom Docker network.
+Both containers are now connected to the same Docker network.
 
 ---
 
-# 🔍 Step 6: Verify Connected Containers
+## Step 6: Verify Connected Containers
 
 Run:
 
@@ -213,29 +174,17 @@ docker network inspect devops-network
 Now you should see:
 
 ```text
+Containers:
+
 container1
 container2
 ```
 
-Both containers are attached to:
-
-```text
-devops-network
-```
-
-The network now looks like:
-
-```text
-                 devops-network
-                       │
-              ┌────────┴────────┐
-              ▼                 ▼
-         container1        container2
-```
+Both containers are attached to the custom network.
 
 ---
 
-# 🔄 Step 7: Test Container-to-Container Communication
+## Step 7: Test Container-to-Container Communication
 
 Open a shell inside `container1`:
 
@@ -249,7 +198,7 @@ Inside the container, update the package repository:
 apt update
 ```
 
-Install the ping utility:
+Install the `ping` utility:
 
 ```bash
 apt install -y iputils-ping
@@ -261,15 +210,16 @@ Now ping `container2` using its container name:
 ping container2
 ```
 
-Expected output:
+### Expected Output
 
 ```text
-PING container2 (172.xx.xx.xx) 56(84) bytes of data.
+PING container2 (172.xx.xx.xx)
 
-64 bytes from container2 (172.xx.xx.xx):
-64 bytes from container2 (172.xx.xx.xx):
-64 bytes from container2 (172.xx.xx.xx):
+64 bytes from container2...
+64 bytes from container2...
 ```
+
+This confirms that `container1` can communicate with `container2` using the container name.
 
 Press:
 
@@ -283,25 +233,11 @@ Exit the container:
 exit
 ```
 
-### What happened?
-
-`container1` was able to communicate with `container2` using:
-
-```text
-container2
-```
-
-instead of directly using its IP address.
-
-Docker provides **built-in DNS resolution** for containers connected to the same user-defined network.
-
 ---
 
-# 🔌 Step 8: Disconnect a Container
+## Step 8: Disconnect a Container
 
-Disconnect `container2` from the custom network.
-
-Run:
+Disconnect `container2` from the network:
 
 ```bash
 docker network disconnect devops-network container2
@@ -313,15 +249,13 @@ Verify:
 docker network inspect devops-network
 ```
 
-Now only `container1` should be listed in the network configuration.
+Now only `container1` should be listed under the `Containers` section.
 
 ---
 
-# 🔗 Step 9: Connect the Container Again
+## Step 9: Connect the Container Again
 
-Connect `container2` back to the network.
-
-Run:
+Connect `container2` back to the network:
 
 ```bash
 docker network connect devops-network container2
@@ -342,39 +276,49 @@ container2
 
 ---
 
-# 🔄 Workflow
+## Workflow
 
 ```text
-Docker Network
-       │
-       ▼
-devops-network
-       │
-       ├──────────────┐
-       ▼              ▼
-container1       container2
-       │              │
-       └───────┬──────┘
-               ▼
-      Container Communication
-               │
-               ▼
-       Container Name / DNS
+                 Docker Network
+                       |
+                       v
+               devops-network
+                  /          \
+                 /            \
+                v              v
+         container1       container2
+                \              /
+                 \            /
+                  v          v
+             Container Communication
+                       |
+                       v
+              Communication by Name
 ```
 
 ---
 
-# 🌍 Real Project Example
+# Types of Docker Networks
 
-Suppose you deploy a web application consisting of three containers:
+| Network Type | Description |
+|--------------|-------------|
+| **Bridge** | Default network for containers on the same host |
+| **Host** | Container shares the host's network |
+| **None** | No network connectivity |
+| **Overlay** | Connects containers across multiple Docker hosts, commonly used with Docker Swarm |
+| **Macvlan** | Assigns a MAC address so containers appear as physical network devices |
 
-```text
-Frontend (React)
-Backend (Spring Boot)
-MySQL Database
-```
+---
 
-All containers can communicate through:
+# Real Project Example
+
+Suppose you deploy a web application consisting of:
+
+- Frontend — React
+- Backend — Spring Boot
+- Database — MySQL
+
+All these containers can communicate through:
 
 ```text
 devops-network
@@ -383,13 +327,16 @@ devops-network
 ### Architecture
 
 ```text
-Frontend
-   │
-   ▼
-Backend
-   │
-   ▼
-MySQL
+                 Frontend
+                 (React)
+                    |
+                    v
+                 Backend
+               (Spring Boot)
+                    |
+                    v
+                  MySQL
+                (Database)
 ```
 
 The Backend communicates with MySQL using the container name:
@@ -398,64 +345,47 @@ The Backend communicates with MySQL using the container name:
 mysql-db
 ```
 
-instead of using an IP address.
-
-For example:
-
-```text
-DB_HOST=mysql-db
-```
+instead of directly using the container IP address.
 
 ---
 
-# 💡 Why Use Container Names Instead of IP Addresses?
+# Why Use Container Names Instead of IP Addresses?
 
 Container IP addresses may change when a container is recreated.
 
 For example:
 
 ```text
-Old Container IP:
 172.18.0.4
 ```
 
-After the container is recreated:
+may change after the container is removed and recreated.
 
-```text
-New Container IP:
-172.18.0.7
-```
-
-If an application uses the IP address directly, the configuration may break.
-
-Instead, use the container name:
+Instead, applications can communicate using the container name:
 
 ```text
 mysql-db
 ```
 
-Docker automatically resolves the container name to its current IP address within the user-defined network.
+Docker automatically resolves container names within the same user-defined network.
 
-Therefore:
+Therefore, instead of depending on:
 
 ```text
-Application
-     │
-     ▼
- mysql-db
-     │
-     ▼
-Docker DNS
-     │
-     ▼
-Current Container IP
+172.18.0.4
 ```
 
-This makes container-to-container communication more reliable.
+the application can use:
+
+```text
+mysql-db
+```
+
+This makes containerized applications more reliable and easier to manage.
 
 ---
 
-# 📚 Docker Network Commands
+# Docker Network Commands
 
 ### Create Network
 
@@ -495,55 +425,53 @@ docker network rm my-network
 
 ---
 
-# ✅ Expected Outcome
+# Expected Outcome
 
-- Custom Docker network created successfully.
-- Two containers attached to the custom network.
-- Containers communicate with each other.
-- Container-to-container communication tested using container names.
-- Docker DNS resolution understood.
-- Container successfully disconnected from the network.
-- Container successfully connected back to the network.
+After completing this lab:
+
+- Custom Docker network created successfully
+- Two containers attached to the network
+- Containers communicate using container names
+- Container-to-container communication verified
+- Container successfully disconnected from the network
+- Container successfully connected back to the network
+- Docker Network commands practiced successfully
 
 ---
 
-# 🎤 Interview Questions
+# Interview Questions
 
 ## Q1. What is a Docker Network?
 
-**Answer:**
+### Answer
 
-A Docker Network allows Docker containers to communicate with each other and with external systems while providing network isolation.
+A Docker Network allows Docker containers to communicate with each other and with external systems in an isolated and secure manner.
 
 ---
 
 ## Q2. Why do we create a custom Docker network?
 
-**Answer:**
+### Answer
 
-A custom Docker network enables communication between related containers and provides automatic DNS resolution using container names.
+A custom Docker network enables secure communication between related containers and provides automatic DNS resolution using container names.
 
 ---
 
 ## Q3. What is the default network driver in Docker?
 
-**Answer:**
+### Answer
 
-The default network driver is:
-
-```text
-bridge
-```
+The default network driver is **Bridge**.
 
 ---
 
 ## Q4. How do containers communicate within the same Docker network?
 
-**Answer:**
+### Answer
 
-Containers connected to the same user-defined network can communicate using their container names because Docker provides built-in DNS resolution.
+Containers communicate using their **container names**, as Docker provides built-in DNS resolution within a user-defined network.
 
-For example:
+Example:
 
 ```bash
 ping container2
@@ -553,7 +481,7 @@ ping container2
 
 ## Q5. Which command displays all Docker networks?
 
-**Answer:**
+### Answer
 
 ```bash
 docker network ls
@@ -563,7 +491,7 @@ docker network ls
 
 ## Q6. How do you inspect a Docker network?
 
-**Answer:**
+### Answer
 
 ```bash
 docker network inspect <network-name>
@@ -577,61 +505,85 @@ docker network inspect devops-network
 
 ---
 
-## Q7. How do you create a Docker network?
+## Q7. How do you connect an existing container to a Docker network?
 
-**Answer:**
+### Answer
 
 ```bash
-docker network create devops-network
+docker network connect <network-name> <container-name>
+```
+
+Example:
+
+```bash
+docker network connect devops-network container2
 ```
 
 ---
 
-## Q8. How do you connect an existing container to a Docker network?
+## Q8. How do you disconnect a container from a Docker network?
 
-**Answer:**
+### Answer
 
 ```bash
-docker network connect devops-network container1
+docker network disconnect <network-name> <container-name>
+```
+
+Example:
+
+```bash
+docker network disconnect devops-network container2
 ```
 
 ---
 
-## Q9. How do you disconnect a container from a Docker network?
+# Key Takeaways
 
-**Answer:**
-
-```bash
-docker network disconnect devops-network container1
+```text
+Docker Network
+      |
+      v
+User-Defined Network
+      |
+      +-------------------+
+      |                   |
+      v                   v
+ container1          container2
+      |                   |
+      +---------+---------+
+                |
+                v
+       Container Communication
+                |
+                v
+       Docker DNS Resolution
+                |
+                v
+       Communication by Name
 ```
 
----
+The key concept from this lab is:
 
-# 🔑 Key Takeaways
-
-- Docker Networks allow containers to communicate with each other.
-- Custom networks provide isolated communication between related containers.
-- Containers on the same user-defined network can communicate using container names.
-- Docker provides built-in DNS resolution for containers on user-defined networks.
-- Container IP addresses can change when containers are recreated.
-- Using container names is more reliable than hard-coded IP addresses.
-- `docker network inspect` is useful for troubleshooting Docker networking.
-- Docker networking is an important foundation for Docker Compose and Kubernetes networking.
+> **Containers connected to the same user-defined Docker network can communicate with each other using container names instead of relying on container IP addresses.**
 
 ---
 
-# 🎉 Conclusion
+# Conclusion
 
-Today, I learned how to create a **custom Docker network** and connect multiple containers to it.
+In this hands-on lab, we learned how to:
 
-I also tested container-to-container communication using **container names** and understood how Docker's built-in DNS resolution works.
+1. View existing Docker networks
+2. Create a custom Docker network
+3. Inspect a Docker network
+4. Create containers and attach them to a custom network
+5. Test container-to-container communication
+6. Use container names for communication
+7. Disconnect a container from a network
+8. Connect a container back to the network
+9. Practice commonly used Docker Network commands
 
-This hands-on lab strengthened my understanding of Docker networking, an essential concept for working with containerized applications in real-world DevOps environments.
+Docker networking is an important foundation for running multi-container applications and understanding more advanced technologies such as **Docker Compose, Kubernetes, microservices, and cloud-native architectures**.
 
 ---
 
-## ⭐ Support
-
-If you found this repository helpful, consider giving it a **⭐ Star** and follow my DevOps learning journey.
-
-Happy Learning! 🚀
+**Day 08 Completed — Docker Network 🚀**
