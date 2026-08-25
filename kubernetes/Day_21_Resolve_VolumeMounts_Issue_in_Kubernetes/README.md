@@ -175,10 +175,9 @@ kubectl apply -f pod.yaml
 ```
 
 Expected output:
-OAOAOA
-OAOAOA```text
-OAOAOApod/nginx-volume-pod created
-OAOAOA```
+```text
+pod/nginx-volume-pod created
+```
 
 ---
 
@@ -187,11 +186,9 @@ Expected output:
 Check the Pod:
 
 ```bash
-OAOAOAkubectl get pods
+kubectl get pods
 ```
-OAOAOA
-OAOAOAExpected output:
-OAOAOA
+Expected output:
 ```text
 NAME               READY   STATUS    RESTARTS
 nginx-volume-pod   1/1     Running   0
@@ -200,11 +197,10 @@ nginx-volume-pod   1/1     Running   0
 ---
 
 ## Step 7: Verify the Mount
-OAOAOA
-OAOAOADescribe the Pod:
+Describe the Pod:
 
-OAOAOA```bash
-OAOAOAkubectl describe pod nginx-volume-pod
+```bash
+kubectl describe pod nginx-volume-pod
 ```
 
 Look for:
@@ -213,7 +209,7 @@ Look for:
 Mounts:
   /usr/share/nginx/html from nginx-storage
 ```
-OAOAOAOAOAOA
+
 You should also see:
 
 ```text
@@ -227,22 +223,21 @@ This confirms that the volume has been mounted.
 ---
 
 ## Step 8: Enter the Container
-OAOAOA
 Enter the container:
 
 ```bash
 kubectl exec -it nginx-volume-pod -- /bin/bash
-OBOBOB```
-
-OBOBOBInside the container:
-
-```bash
-OBOBOBdf -h
 ```
 
-OBOBOBYou can also check:
+Inside the container:
 
-OBOBOB```bash
+```bash
+df -h
+```
+
+You can also check:
+
+```bash
 mount
 ```
 
@@ -252,27 +247,27 @@ Then:
 ls -la /usr/share/nginx/html
 ```
 
-OBOBOBExit:
+Exit:
 
-OBOBOB```bash
-OBOBOBexit
+```bash
+exit
 ```
-OBOBOB
+
 ---
 
-OBOBOB## Step 9: Understand a Common VolumeMount Error
+## Step 9: Understand a Common VolumeMount Error
 
 Now let's intentionally create an error.
 
 Change:
 
 ```yaml
-OBOBOBvolumeMounts:
-OBOBOB  - name: nginx-storage
-OBOBOB```
+volumeMounts:
+- name: nginx-storage
+```
 
-OBOBOBto:
-OBOBOB
+to:
+
 ```yaml
 volumeMounts:
   - name: wrong-volume
@@ -798,7 +793,7 @@ kubectl exec -it nginx-volume-pod -- /bin/bash
 
 ---
 
-# Day 53 Concept
+# Day 21 Concept:
 
 ```text
 Define Volume
