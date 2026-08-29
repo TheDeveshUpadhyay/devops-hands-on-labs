@@ -6,71 +6,119 @@
 
 Learn how to deploy an **Nginx Web Server** on a Kubernetes cluster and expose it so that users can access the application.
 
-Today we will understand this flow:
+In this hands-on task, we will understand the following flow:
 
 ```text
 User
-  ↓
+  |
+  v
 Kubernetes Service
-  ↓
+  |
+  v
 Nginx Pod
-  ↓
+  |
+  v
 Nginx Web Server
-Scenario
+```
+
+The lab also demonstrates:
+
+* Kubernetes Deployment
+* Multiple Pod replicas
+* `containerPort`
+* Kubernetes Service
+* `NodePort`
+* Service selectors
+* Service endpoints
+* Internal and external application access
+* Pod self-healing
+* Deployment scaling
+* Basic Kubernetes troubleshooting commands
+
+---
+
+## Scenario
 
 Suppose you have an Nginx web application that needs to run on Kubernetes.
 
-Instead of manually installing Nginx on a server, Kubernetes will:
+Instead of manually installing Nginx on individual servers, Kubernetes can:
 
-Create the Nginx Pods
-Run the Nginx containers
-Maintain the desired number of replicas
-Expose Nginx through a Service
-Allow users to access the web server
+* Create the Nginx Pods
+* Run the Nginx container
+* Maintain the desired number of replicas
+* Replace failed Pods
+* Expose Nginx through a Service
+* Route traffic to available Nginx Pods
+* Scale the application when required
 
-Our final architecture will look like:
+The final architecture will look like this:
 
+```text
                     Kubernetes Cluster
-                           │
-                           ▼
+                           |
+                           v
                       Deployment
-                           │
-             ┌─────────────┼─────────────┐
-             ▼             ▼             ▼
-           Pod 1         Pod 2         Pod 3
-             │             │             │
-             └─────────────┼─────────────┘
-                           │
-                           ▼
+                           |
+              +------------+------------+
+              |            |            |
+              v            v            v
+            Pod 1        Pod 2        Pod 3
+              |            |            |
+              +------------+------------+
+                           |
+                           v
                         Service
-                           │
-                           ▼
+                           |
+                           v
                           User
-Prerequisites
+```
 
-Check that your Kubernetes cluster is running:
+---
 
+# Prerequisites
+
+Before starting the lab, make sure a Kubernetes cluster is running.
+
+Check the Kubernetes nodes:
+
+```bash
 kubectl get nodes
+```
 
 Expected output:
 
-NAME           STATUS   ROLES
-controlplane   Ready    control-plane
-node01         Ready    <none>
-Step 1: Create a Directory
+```text
+NAME           STATUS   ROLES           AGE   VERSION
+controlplane   Ready    control-plane   ...   ...
+node01         Ready    <none>          ...   ...
+```
 
-Create a directory for the Day 24 Kubernetes files:
+Both nodes should have a `Ready` status.
 
+---
+
+# Step 1: Create a Directory
+
+Create a working directory for the Day 24 task:
+
+```bash
 mkdir day24-nginx
 cd day24-nginx
-Step 2: Create Deployment YAML
+```
 
-Create the Deployment manifest:
+---
 
+# Step 2: Create the Deployment YAML
+
+Create a Deployment manifest:
+
+```bash
 vi deployment.yaml
+```
 
 Add the following configuration:
 
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 
@@ -95,136 +143,221 @@ spec:
           image: nginx:latest
           ports:
             - containerPort: 80
-Step 3: Understand the Deployment
+```
+
+Save the file.
+
+---
+
+# Step 3: Understand the Deployment
+
+The Kubernetes `Deployment` manages the Nginx Pods.
+
+### `kind: Deployment`
+
+This tells Kubernetes that we are creating a Deployment resource.
+
+```yaml
 kind: Deployment
+```
 
-The Deployment manages our Nginx Pods.
+### `replicas: 3`
 
+This tells Kubernetes to maintain three Nginx Pod replicas.
+
+```yaml
 replicas: 3
+```
 
-This tells Kubernetes:
+The resulting structure will look like:
 
-Keep 3 Nginx Pods running.
-
-So Kubernetes creates:
-
+```text
 nginx-deployment
-       │
-       ├── Pod 1
-       ├── Pod 2
-       └── Pod 3
+       |
+       +---- Pod 1
+       |
+       +---- Pod 2
+       |
+       +---- Pod 3
+```
 
-The Deployment continuously works to maintain the desired replica count.
+If one Pod fails, the Deployment works with the underlying ReplicaSet to create a replacement Pod so that the desired replica count is maintained.
 
-Step 4: Understand containerPort
+---
+
+# Step 4: Understand `containerPort`
 
 The Deployment contains:
 
+```yaml
 ports:
   - containerPort: 80
+```
 
-This indicates that the Nginx container is intended to receive application traffic on port 80.
+This indicates that the Nginx container is intended to receive application traffic on port `80`.
 
 Nginx normally listens on:
 
+```text
 Port 80
-Important
+```
 
-containerPort: 80 by itself does not expose Nginx to users outside the Pod.
+### Important
 
-A Kubernetes Service is used to provide network access to the Pods.
+`containerPort: 80` does **not** expose the application outside the Pod.
 
-Step 5: Deploy Nginx
+It describes the container port. To provide network access through Kubernetes, we need a **Service**.
 
-Apply the Deployment:
+The flow is:
 
+```text
+Container
+   |
+   | listens on
+   v
+Port 80
+   |
+   v
+Kubernetes Service
+   |
+   v
+Users
+```
+
+---
+
+# Step 5: Deploy Nginx
+
+Apply the Deployment manifest:
+
+```bash
 kubectl apply -f deployment.yaml
+```
 
 Expected output:
 
+```text
 deployment.apps/nginx-deployment created
-Step 6: Check the Deployment
+```
 
-Run:
+---
 
+# Step 6: Check the Deployment
+
+Verify the Deployment:
+
+```bash
 kubectl get deployment
+```
 
 Expected output:
 
+```text
 NAME               READY   UP-TO-DATE   AVAILABLE
 nginx-deployment   3/3     3            3
+```
 
-OAOAOAThe important part is:
-OAOAOA
+The important value is:
+
+```text
 3/3
-OAOAOA
+```
+
 This means:
 
-Desired replicas = 3
-OAOAOAReady replicas = 3
-Available replicas = 3
+* Desired replicas = 3
+* Ready replicas = 3
+* Available replicas = 3
 
-OAOAOAAll three Nginx Pods are ready.
+The Deployment is successfully maintaining three ready Pods.
 
-Step 7: Check the Pods
+---
+
+# Step 7: Check the Pods
 
 Run:
 
+```bash
 kubectl get pods
+```
 
-Example output:
+Expected output will look similar to:
 
-NAME                              READY   STATUS
-OAOAOAnginx-deployment-xxxxx-aaaaa      1/1     Running
-OAOAOAnginx-deployment-xxxxx-bbbbb      1/1     Running
-nginx-deployment-xxxxx-ccccc      1/1     Running
-OAOAOA
-All three Pods should have:
+```text
+NAME                                  READY   STATUS    RESTARTS   AGE
+nginx-deployment-xxxxx-aaaaa          1/1     Running   0          ...
+nginx-deployment-xxxxx-bbbbb          1/1     Running   0          ...
+nginx-deployment-xxxxx-ccccc          1/1     Running   0          ...
+```
 
-STATUS: Running
+All three Nginx Pods should show:
 
-and:
+```text
+READY     1/1
+STATUS    Running
+```
 
-OAOAOAREADY: 1/1
-OAOAOAStep 8: Check the Nginx Application
+Pod names will be different in your cluster.
+
+---
+
+# Step 8: Check the Nginx Application
 
 First, list the Pods:
-OAOAOA
-OAOAOAkubectl get pods
 
-Copy the name of one of the Nginx Pods.
+```bash
+kubectl get pods
+```
+
+Copy the name of one Nginx Pod.
 
 Then enter the container:
 
+```bash
 kubectl exec -it <pod-name> -- /bin/bash
+```
 
 Inside the container, check the Nginx version:
 
-OAOAOAnginx -v
-OAOAOA
-OAOAOAExpected output will be similar to:
+```bash
+nginx -v
+```
 
+Expected output will look similar to:
+
+```text
 nginx version: nginx/1.27.x
+```
 
-OAOAOAYou can also inspect the Nginx configuration:
+You can also inspect the Nginx configuration:
 
+```bash
 cat /etc/nginx/nginx.conf
+```
 
-Exit the container:
+After checking the configuration, exit the container:
 
+```bash
 exit
-Step 9: Create a Kubernetes Service
+```
+
+---
+
+# Step 9: Create a Kubernetes Service
 
 At this point, Nginx is running inside the Pods.
 
-However, users need a way to access the application.
+However, users need a stable way to access the application.
 
-Create the Service manifest:
+Create a Service manifest:
 
+```bash
 vi service.yaml
+```
 
-Add the following configuration:
+Add:
 
+```yaml
 apiVersion: v1
 kind: Service
 
@@ -241,565 +374,885 @@ spec:
     - port: 80
       targetPort: 80
       nodePort: 30080
+```
 
 Save the file.
 
-Step 10: Understand the Service
+---
 
-The Service provides network access to the Nginx Pods.
+# Step 10: Understand the Service
 
-The traffic flow is:
+The Kubernetes Service provides network access to the Nginx Pods.
 
+The request flow is:
+
+```text
 User
-  │
-  ▼
+ |
+ v
 NodePort 30080
-  │
-  ▼
+ |
+ v
 nginx-service
-  │
-  ▼
-Service selects:
-app: nginx
-  │
-  ├── Pod 1
-  ├── Pod 2
-  └── Pod 3
+ |
+ v
+Service Selector
+ |
+ | app: nginx
+ |
+ +--------+--------+
+ |        |        |
+ v        v        v
+Pod 1    Pod 2    Pod 3
+ |        |        |
+ +--------+--------+
+          |
+          v
+       Nginx:80
+```
 
-The Service uses the Pod labels to determine which Pods should receive traffic.
+The Service provides a stable endpoint while the individual Pod IP addresses can change.
 
-Step 11: Understand the Service Selector
+---
 
-Our Deployment creates Pods with the following label:
+# Step 11: Understand the Service Selector
 
+The Deployment creates Pods with the following label:
+
+```yaml
 labels:
   app: nginx
+```
 
-The Service contains:
+The Service uses:
 
+```yaml
 selector:
   app: nginx
+```
 
-This means:
+This means the Service looks for Pods having:
 
-Find Pods having the label app: nginx and send traffic to them.
+```text
+app=nginx
+```
 
-This connection is extremely important.
+The relationship is:
 
+```text
 Service selector
-      ↓
-  app: nginx
-      ↓
-   Pod label
-      ↓
-  app: nginx
+      |
+      v
+app: nginx
+      |
+      v
+Pod label
+      |
+      v
+app: nginx
+```
 
 If the Service selector does not match the Pod labels, the Service will not have the intended Pod endpoints.
 
-Step 12: Understand the Service Ports
+This is one of the most important concepts to understand when troubleshooting Kubernetes Services.
 
-Our Service contains:
+---
 
+# Step 12: Understand the Service Ports
+
+The Service contains three port-related fields:
+
+```yaml
 ports:
   - port: 80
     targetPort: 80
     nodePort: 30080
+```
 
-These are three different concepts:
+These represent different parts of the traffic path.
 
+```text
 NodePort
-   ↓
- 30080
-   ↓
- port
-   ↓
-  80
-   ↓
-targetPort
-   ↓
-  80
-   ↓
-Nginx container
-nodePort: 30080
+   |
+   | 30080
+   v
+Service
+   |
+   | port 80
+   v
+targetPort 80
+   |
+   v
+Nginx Container
+```
 
-The port exposed on the Kubernetes Node.
+## `nodePort`
+
+```yaml
+nodePort: 30080
+```
+
+This is the port exposed on the Kubernetes node.
 
 Users can access the application using:
 
-<Node-IP>:30080
+```text
+http://<Node-IP>:30080
+```
+
+## `port`
+
+```yaml
 port: 80
+```
 
-The port exposed by the Kubernetes Service.
+This is the port exposed by the Kubernetes Service.
 
+## `targetPort`
+
+```yaml
 targetPort: 80
+```
 
-The port where the application is listening inside the Pod.
+This is the port on which the application is listening inside the selected Pod.
 
-In this example:
+Therefore:
 
-NodePort   = 30080
-Service     = 80
-Container   = 80
-Step 13: Create the Service
+```text
+nodePort:   30080
+port:       80
+targetPort: 80
+```
 
-Apply the Service configuration:
+---
 
+# Step 13: Create the Service
+
+Apply the Service manifest:
+
+```bash
 kubectl apply -f service.yaml
+```
 
 Expected output:
 
+```text
 service/nginx-service created
-Step 14: Check the Service
+```
+
+---
+
+# Step 14: Check the Service
 
 Run:
 
+```bash
 kubectl get service
+```
 
-Example output:
+Expected output will look similar to:
 
-NAME            TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)
-nginx-service   NodePort   10.x.x.x       <none>        80:30080/TCP
+```text
+NAME            TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)
+nginx-service   NodePort   10.x.x.x        <none>        80:30080/TCP
+```
 
 The important part is:
 
+```text
 80:30080/TCP
+```
 
 This means:
 
+```text
 Service port = 80
-NodePort      = 30080
-Step 15: Check Service Endpoints
+NodePort     = 30080
+```
 
-Run:
+The Service forwards traffic toward the selected Pods on the configured `targetPort`.
 
+---
+
+# Step 15: Check Service Endpoints
+
+Check the endpoints associated with the Service:
+
+```bash
 kubectl get endpoints nginx-service
+```
 
-You should see the IP addresses of the Nginx Pods.
+Expected output may look similar to:
 
-Example:
-
+```text
 NAME            ENDPOINTS
 nginx-service   192.168.1.10:80,192.168.1.11:80,192.168.1.12:80
+```
 
-This confirms that the Service has found the Nginx Pods.
+These addresses represent the Pods selected by the Service.
 
-The endpoint IPs correspond to the Pods selected by:
+This is useful when troubleshooting Service connectivity.
 
-selector:
-  app: nginx
-Step 16: Access Nginx
+If the Service exists but there are no endpoints, check:
 
-If your Kubernetes cluster is running in a VM or lab environment, find the Node IP:
+1. Pod labels
+2. Service selector
+3. Pod status
+4. Pod readiness
+5. Service configuration
 
+---
+
+# Step 16: Access Nginx
+
+If the Kubernetes cluster is running in a VM or lab environment, first find the Node IP:
+
+```bash
 kubectl get nodes -o wide
+```
 
-Then access Nginx using:
+Identify the Node IP address.
 
+Then access:
+
+```text
 http://<Node-IP>:30080
+```
 
 For example:
 
+```text
 http://172.30.2.2:30080
+```
 
 You should see the default Nginx page:
 
+```text
 Welcome to nginx!
-Step 17: Test Using curl
+```
 
-If you can access the Node from a terminal, run:
+The exact Node IP will depend on your Kubernetes environment.
 
+---
+
+# Step 17: Test Using `curl`
+
+You can also test the application using `curl`.
+
+From a terminal that can reach the Node:
+
+```bash
 curl http://<Node-IP>:30080
+```
 
 You should receive the Nginx HTML response.
 
-You can also test the Service from inside the Kubernetes cluster using the Service DNS name:
+For example:
 
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+...
+</html>
+```
+
+---
+
+## Test Nginx Through the Service
+
+From inside the Kubernetes cluster, you can access the Service by its DNS name:
+
+```bash
 curl http://nginx-service
+```
 
-This demonstrates the difference between external and internal access.
+This demonstrates two different access patterns.
 
-External Access
-User
-  ↓
+### External Access
+
+```text
+Client
+  |
+  v
 Node-IP:30080
-  ↓
+  |
+  v
 nginx-service
-  ↓
+  |
+  v
 Nginx Pod
-Internal Cluster Access
+```
+
+### Internal Cluster Access
+
+```text
 Pod
-  ↓
+ |
+ v
 nginx-service:80
-  ↓
+ |
+ v
 Nginx Pod
-Step 18: Check Everything
+```
+
+The Service provides a stable endpoint for communication with the application.
+
+---
+
+# Step 18: Check Everything
 
 Run the following commands:
 
+```bash
 kubectl get deployment
+```
+
+```bash
 kubectl get pods
+```
+
+```bash
 kubectl get service
+```
+
+```bash
 kubectl get endpoints nginx-service
+```
 
-You should have:
+Expected state:
 
-Deployment → 3/3 Ready
-Pods       → 3 Running
-Service    → NodePort
-Endpoints  → 3 Pod IPs
-Complete Architecture
+```text
+Deployment  -> 3/3 Ready
+Pods        -> 3 Running
+Service     -> NodePort
+Endpoints   -> 3 Pod IPs
+```
 
-The complete request flow looks like:
+---
 
+# Complete Architecture
+
+The complete request path is:
+
+```text
                          User
-                           │
-                           │
-                           ▼
+                           |
+                           |
+                           v
                     Node IP:30080
-                           │
-                           ▼
+                           |
+                           v
                     nginx-service
                        NodePort
-                           │
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-            Pod 1        Pod 2        Pod 3
-              │            │            │
-              ▼            ▼            ▼
-           Nginx:80     Nginx:80     Nginx:80
-Important Concept: Why Deployment + Service?
+                           |
+                 +---------+---------+
+                 |         |         |
+                 v         v         v
+               Pod 1     Pod 2     Pod 3
+                 |         |         |
+                 v         v         v
+              Nginx:80  Nginx:80  Nginx:80
+```
+
+---
+
+# Important Concept: Deployment + Service
+
+A common Kubernetes design is to use a **Deployment** together with a **Service**.
+
+## Deployment
+
+The Deployment manages the application Pods.
+
+```text
 Deployment
+    |
+    v
+Creates and manages Pods
+    |
+    v
+Maintains desired replicas
+    |
+    v
+3 Nginx Pods
+```
 
-A Deployment manages the Pods.
+## Service
 
-Deployment
-    ↓
-Creates/manages Pods
-    ↓
-Keeps 3 replicas running
+The Service provides network access to the Pods.
 
-The Deployment provides:
-
-Desired replica management
-Self-healing
-Scaling
-Controlled application updates
-Rollback capabilities
+```text
 Service
-
-A Service provides network access to the Pods.
-
-Service
-    ↓
-Finds Pods using labels
-    ↓
+    |
+    v
+Uses label selector
+    |
+    v
+Finds matching Pods
+    |
+    v
 Routes traffic to Pods
+```
 
-The Service provides:
+Therefore:
 
-A stable network endpoint
-Service discovery
-Traffic routing to selected Pods
-Access to Pods without depending directly on Pod IP addresses
-Deployment vs Service
-Kubernetes Resource	Main Responsibility
-Deployment	Manages application Pods
-Service	Provides network access to Pods
-
-In simple terms:
-
+```text
 Deployment = manages application instances
 
 Service = provides network access to application instances
-Step 19: Test Self-Healing
+```
 
-One of the important benefits of Kubernetes is self-healing.
+---
+
+# Step 19: Test Kubernetes Self-Healing
+
+One of the important features of a Deployment is self-healing.
+
+First, check the Pods:
+
+```bash
+kubectl get pods
+```
 
 Delete one Nginx Pod:
 
+```bash
 kubectl delete pod <pod-name>
+```
 
-Immediately check the Pods:
+Immediately check the Pods again:
 
+```bash
 kubectl get pods
+```
 
 You should see Kubernetes create a replacement Pod.
 
-Why?
+The process looks like:
+
+```text
+3 Pods Running
+      |
+      v
+Delete 1 Pod
+      |
+      v
+2 Pods Running
+      |
+      v
+Deployment detects desired state mismatch
+      |
+      v
+Replacement Pod created
+      |
+      v
+3 Pods Running
+```
+
+Why does this happen?
 
 Because the Deployment specifies:
 
+```yaml
 replicas: 3
+```
 
-The Deployment continuously tries to maintain the desired state.
+Kubernetes continuously works toward the desired state.
 
-The process looks like:
+If only two Pods are running, Kubernetes creates another Pod to return to three replicas.
 
-3 Pods
-  ↓
-Delete 1 Pod
-  ↓
-2 Pods
-  ↓
-[ODeployment detects the difference
-  ↓
-Creates a replacement Pod
-  ↓
-3 Pods
+---
 
-This demonstrates Kubernetes' self-healing behavior.
+# Step 20: Scale Nginx
 
-Step 20: Scale Nginx
-
-Suppose traffic increases and we need more Nginx replicas.
+Suppose application traffic increases and you need more Nginx replicas.
 
 Scale the Deployment from 3 to 5 replicas:
 
+```bash
 kubectl scale deployment nginx-deployment --replicas=5
+```
 
 Check the Pods:
 
+```bash
 kubectl get pods
+```
 
-You should now have:
+You should now have five Nginx Pods.
 
-5 Nginx Pods
+The Service automatically sends traffic to the available Pods matching:
 
-The Service automatically routes traffic to the available Pods selected by:
-
+```yaml
 selector:
   app: nginx
+```
 
-The architecture now becomes:
+The flow becomes:
 
-                   nginx-service
-                        │
-          ┌─────────────┼─────────────┐
-          ▼             ▼             ▼
-        Pod 1         Pod 2         Pod 3
-          │             │             │
-          ├─────────────┼─────────────┤
-          │             │             │
-        Pod 4         Pod 5
+```text
+                    nginx-service
+                          |
+          +---------------+---------------+
+          |       |       |       |       |
+          v       v       v       v       v
+        Pod 1   Pod 2   Pod 3   Pod 4   Pod 5
+```
 
-The Service does not need to be manually updated when the number of replicas changes, as long as the Pods continue to match its selector.
+---
 
-Step 21: Clean Up
+# Step 21: Clean Up
 
-Delete the Service:
+To delete the Service:
 
+```bash
 kubectl delete service nginx-service
+```
 
-Delete the Deployment:
+To delete the Deployment:
 
+```bash
 kubectl delete deployment nginx-deployment
+```
 
-Alternatively, delete the resources using the YAML files:
+Alternatively, delete the resources using their YAML files:
 
+```bash
 kubectl delete -f deployment.yaml
+```
+
+```bash
 kubectl delete -f service.yaml
-Useful Commands
-Command	Purpose
-kubectl apply -f deployment.yaml	Create or update the Nginx Deployment
-kubectl get deployment	Check Deployment status
-kubectl get pods	Check Nginx Pods
-kubectl describe deployment nginx-deployment	View detailed Deployment information
-kubectl exec -it <pod> -- /bin/bash	Enter the Nginx container
-kubectl apply -f service.yaml	Create or update the Service
-kubectl get service	Check Service status
-kubectl get endpoints nginx-service	Check Service endpoints
-kubectl get nodes -o wide	Find Node IP addresses
-kubectl scale deployment nginx-deployment --replicas=5	Scale Nginx to 5 replicas
-kubectl delete pod <pod-name>	Test Kubernetes self-healing
-kubectl delete -f deployment.yaml	Delete the Deployment
-kubectl delete -f service.yaml	Delete the Service
-Expected Outcome
+```
 
-After completing this task:
+---
 
-Nginx Deployment is created.
-3 Nginx Pods are running.
-Nginx is verified inside the container.
-Kubernetes Service is created.
-Service connects to Nginx Pods using labels.
-Nginx is exposed through NodePort 30080.
-Nginx web page is accessed through the Node IP.
-Service endpoints are verified.
-Pod self-healing is tested.
-Deployment scaling is tested.
-Nginx is successfully exposed to users through Kubernetes.
-Interview Questions
-Q1. How would you deploy Nginx on Kubernetes?
-Answer
+# Useful Commands
 
-I would create a Kubernetes Deployment using the Nginx image, specify the desired number of replicas, and expose the Deployment using a Kubernetes Service.
+| Command                                                  | Purpose                                         |
+| -------------------------------------------------------- | ----------------------------------------------- |
+| `kubectl get nodes`                                      | Check Kubernetes cluster nodes                  |
+| `kubectl apply -f deployment.yaml`                       | Create or update the Nginx Deployment           |
+| `kubectl get deployment`                                 | Check Deployment status                         |
+| `kubectl get pods`                                       | Check Nginx Pods                                |
+| `kubectl describe deployment nginx-deployment`           | View detailed Deployment information            |
+| `kubectl exec -it <pod-name> -- /bin/bash`               | Enter the Nginx container                       |
+| `kubectl apply -f service.yaml`                          | Create or update the Service                    |
+| `kubectl get service`                                    | Check Service status                            |
+| `kubectl get endpoints nginx-service`                    | Check Pod endpoints associated with the Service |
+| `kubectl get nodes -o wide`                              | Find Node IP addresses                          |
+| `kubectl scale deployment nginx-deployment --replicas=5` | Scale Nginx to five replicas                    |
+| `kubectl delete pod <pod-name>`                          | Test Pod self-healing                           |
+| `kubectl delete service nginx-service`                   | Delete the Nginx Service                        |
+| `kubectl delete deployment nginx-deployment`             | Delete the Nginx Deployment                     |
 
-Example:
+---
 
+# Expected Outcome
+
+After completing this lab, you should have successfully:
+
+* Created an Nginx Deployment.
+* Created three Nginx Pod replicas.
+* Verified that all Pods are running.
+* Verified the Nginx installation inside a Pod.
+* Understood the purpose of `containerPort: 80`.
+* Created a Kubernetes NodePort Service.
+* Connected the Service to Nginx Pods using labels.
+* Understood the difference between `port`, `targetPort`, and `nodePort`.
+* Verified the Service endpoints.
+* Accessed the Nginx web server through the Node IP.
+* Tested Nginx using `curl`.
+* Tested Kubernetes Pod self-healing.
+* Scaled the Deployment from three to five replicas.
+* Understood how a Service routes traffic to matching Pods.
+
+---
+
+# Interview Questions
+
+## Q1. How would you deploy Nginx on Kubernetes?
+
+### Answer
+
+I would create a Kubernetes Deployment using the Nginx container image, define the desired number of replicas, and expose the Deployment through a Kubernetes Service.
+
+For example:
+
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 
+metadata:
+  name: nginx-deployment
+
 spec:
   replicas: 3
+```
 
-  template:
-    spec:
-      containers:
-        - name: nginx
-          image: nginx:latest
+Then I would create a Service to provide network access to the Nginx Pods.
 
-Then I would create a Service to provide network access to the Pods.
+---
 
-Q2. Why do we use a Deployment instead of creating a Pod directly?
-Answer
+## Q2. Why do we use a Deployment instead of creating a Pod directly?
 
-A Deployment manages the desired number of Pods and provides:
+### Answer
 
-Self-healing
-Scaling
-Controlled updates
-Rollbacks
-Desired-state management
+A Deployment provides higher-level application management.
+
+It can:
+
+* Maintain the desired number of replicas.
+* Replace failed Pods.
+* Support scaling.
+* Support controlled application updates.
+* Support rollbacks.
 
 For example:
 
-replicas: 3
+```yaml
+spec:
+  replicas: 3
+```
 
-The Deployment ensures that Kubernetes attempts to maintain three Pods.
+This tells Kubernetes to maintain three instances of the application.
 
-Q3. What is the purpose of containerPort: 80?
-Answer
+---
 
-containerPort: 80 indicates that the container is intended to receive traffic on port 80.
+## Q3. What is the purpose of `containerPort: 80`?
 
-It does not by itself expose the application outside the Pod.
+### Answer
 
-For external or stable network access, we use a Kubernetes Service.
+`containerPort: 80` indicates that the container is intended to receive application traffic on port `80`.
 
-Q4. Why do we need a Service?
-Answer
+It does **not** expose the application outside the Pod by itself.
 
-Pods are temporary and their IP addresses can change.
-[I
+To provide network access, we can use a Kubernetes Service.
+
+```yaml
+ports:
+  - containerPort: 80
+```
+
+---
+
+## Q4. Why do we need a Kubernetes Service?
+
+### Answer
+
+Pods are temporary resources and their IP addresses can change.
+
 A Service provides a stable network endpoint and routes traffic to the appropriate Pods.
 
-The Service can continue providing access even when individual Pods are replaced.
+For example:
 
-Q5. How does the Service know which Pods to send traffic to?
-Answer
+```text
+Client
+  |
+  v
+Service
+  |
+  v
+Nginx Pods
+```
+
+The Service also uses selectors to determine which Pods should receive traffic.
+
+---
+
+## Q5. How does the Service know which Pods to send traffic to?
+
+### Answer
 
 The Service uses a label selector.
 
-For example:
+The Service contains:
 
+```yaml
 selector:
   app: nginx
+```
 
-The Pods must have the matching label:
+The Pods contain:
 
+```yaml
 labels:
   app: nginx
+```
 
-The relationship is:
+Because the labels match, the Service can identify the Pods and route traffic to them.
 
-Service selector
-      ↓
-  app: nginx
-      ↓
-Pod label
-      ↓
-  app: nginx
+---
 
-If the selector and labels do not match, the Service will not select those Pods.
+## Q6. What is the difference between `port`, `targetPort`, and `nodePort`?
 
-Q6. What is the difference between port, targetPort, and nodePort?
-Answer
-Port	Purpose
-port	Port exposed by the Kubernetes Service
-targetPort	Port where the application is listening inside the Pod
-nodePort	Port exposed on the Kubernetes Node
+### Answer
 
-For our example:
+They represent different ports in the Kubernetes networking path.
 
-port: 80
-targetPort: 80
+```text
+nodePort
+   |
+   v
+port
+   |
+   v
+targetPort
+   |
+   v
+Application
+```
+
+### `nodePort`
+
+The port exposed on the Kubernetes node.
+
+```yaml
 nodePort: 30080
+```
 
-The traffic flow is:
+### `port`
 
-Node IP:30080
-     ↓
-Service port 80
-     ↓
-Pod targetPort 80
-     ↓
-Nginx
-Q7. What happens if an Nginx Pod crashes?
-Answer
+The port exposed by the Kubernetes Service.
 
-The Deployment detects that the desired replica count is no longer satisfied and Kubernetes creates a replacement Pod.
+```yaml
+port: 80
+```
 
-For example:
+### `targetPort`
 
-Desired = 3 Pods
-Current = 2 Pods
-       ↓
-Deployment detects difference
-       ↓
-Creates replacement Pod
-       ↓
-Current = 3 Pods
-Q8. How do you scale Nginx from 3 to 5 replicas?
+The application port inside the selected Pod.
 
-Run:
+```yaml
+targetPort: 80
+```
 
+For this lab:
+
+```text
+nodePort   = 30080
+port       = 80
+targetPort = 80
+```
+
+---
+
+## Q7. What happens if an Nginx Pod crashes?
+
+### Answer
+
+The Deployment detects that the actual number of running replicas no longer matches the desired replica count.
+
+Because the Deployment specifies:
+
+```yaml
+replicas: 3
+```
+
+Kubernetes creates a replacement Pod to return the application to the desired state.
+
+---
+
+## Q8. How do you scale Nginx from 3 to 5 replicas?
+
+### Answer
+
+Use:
+
+```bash
 kubectl scale deployment nginx-deployment --replicas=5
+```
 
 Then verify:
 
+```bash
 kubectl get pods
+```
 
-The Deployment will create additional Pods until five replicas are running.
+The Deployment should create additional Pods until five replicas are running.
 
-Key Takeaways
-A Deployment manages the desired number of Nginx Pods.
-replicas: 3 tells Kubernetes to maintain three Pods.
-containerPort: 80 does not expose the application outside the Pod.
-A Service provides stable network access to Pods.
-Service selectors must match Pod labels.
-port, targetPort, and nodePort have different purposes.
-A NodePort Service can expose the application through the Node IP.
-Service endpoints help verify whether the Service has discovered the expected Pods.
-Deployments provide self-healing when Pods are deleted or fail.
-Scaling the Deployment increases the number of application instances while the Service continues routing traffic to matching Pods.
-Final Architecture
-                           USER
-                            │
-                            │
-                            ▼
-                    Node IP : 30080
-                            │
-                            ▼
-                    ┌───────────────┐
-                    │ nginx-service │
-                    │    NodePort   │
-                    └───────┬───────┘
-                            │
-                     Selector:
-                     app: nginx
-                            │
-          ┌─────────────────┼─────────────────┐
-          ▼                 ▼                 ▼
-       ┌───────┐         ┌───────┐         ┌───────┐
-       │ Pod 1 │         │ Pod 2 │         │ Pod 3 │
-       │Nginx  │         │Nginx  │         │Nginx  │
-       │ :80   │         │ :80   │         │ :80   │
-       └───────┘         └───────┘         └───────┘
+---
 
-Deployment manages the Pods.
+# Key Takeaways
 
-Service provides network access to the Pods.
+1. **Deployment manages application Pods.**
+2. **A Service provides stable network access to Pods.**
+3. `containerPort` does not expose an application outside the Pod.
+4. Service selectors connect Services to Pods through labels.
+5. `port`, `targetPort`, and `nodePort` serve different purposes.
+6. A NodePort Service can expose an application through a Kubernetes node.
+7. Service endpoints help verify whether the Service has discovered the intended Pods.
+8. Deployments provide self-healing by maintaining the desired replica count.
+9. Deployments can be scaled without manually creating individual Pods.
+10. Kubernetes troubleshooting requires checking the complete path from the client to the application.
 
-Labels connect the Service to the correct Pods.
+---
 
-NodePort provides external access to the application.
+# Final Architecture Summary
+
+```text
+                         USER
+                           |
+                           |
+                           v
+                  Node IP : 30080
+                           |
+                           v
+                   +---------------+
+                   | nginx-service |
+                   |   NodePort    |
+                   +---------------+
+                           |
+                    Selector:
+                     app=nginx
+                           |
+             +-------------+-------------+
+             |             |             |
+             v             v             v
+          Pod 1          Pod 2          Pod 3
+             |             |             |
+             v             v             v
+          Nginx:80      Nginx:80      Nginx:80
+```
+
+The complete application flow is:
+
+```text
+User
+  |
+  v
+Node IP:30080
+  |
+  v
+Kubernetes Service
+  |
+  | Selector: app=nginx
+  |
+  +--------+--------+
+  |        |        |
+  v        v        v
+ Pod 1    Pod 2    Pod 3
+  |        |        |
+  +--------+--------+
+           |
+           v
+       Nginx:80
+```
+
+This lab demonstrates the basic Kubernetes application deployment pattern:
+
+```text
+Deployment
+    |
+    v
+Pods
+    |
+    v
+Service
+    |
+    v
+Application Access
+```
+
