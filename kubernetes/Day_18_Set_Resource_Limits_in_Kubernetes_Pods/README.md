@@ -490,7 +490,7 @@ Resource requests and limits are configured under the **container specification*
 
 ```yaml
 spec:
-  containers:
+   containers:
     - name: nginx-container
       resources:
         requests:
